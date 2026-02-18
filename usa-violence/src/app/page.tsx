@@ -1,124 +1,177 @@
 
 "use client";
-import { useEffect } from 'react';
 
-const loadPlotly = async () => {
-  if (typeof window !== 'undefined') {
-    return await import('plotly.js-dist-min');
-  }
-  return null;
-};
+import React from 'react';
+import { violenceData } from '@/data/violenceData';
+import ChartWrapper from '@/components/ChartWrapper';
+import DashboardGrid from '@/components/DashboardGrid';
+import { darkLayout, lightLayout } from '@/utils/chartConfig';
+import { useEffect, useState } from 'react';
+import { Data } from 'plotly.js';
 
-const violenceData = {
-  hateCrime: {
-    years: [2018, 2019, 2020, 2021, 2022, 2023],
-    total: [8180, 8389, 8263, 8577, 11500, 11288],
-    race: [4500, 4600, 4700, 4800, 6400, 6212],
-    religion: [1800, 1750, 1725, 1700, 2400, 2290],
-    sexual_orientation: [1350, 1375, 1400, 1425, 1850, 1860],
-  },
-  ncvsFbi: {
-    years: [2019, 2020, 2021, 2022, 2023],
-    ncvs: [20.1, 21.5, 19.7, 20.3, 19.4],
-    fbi: [379, 398, 387, 381, 364],
-  },
-  leoka: {
-    years: [2019, 2020, 2021, 2022, 2023],
-    assaults: [60000, 65000, 70000, 78000, 79936],
-    felonious: [48, 46, 73, 71, 60],
-    ambush: [7, 9, 12, 14, 11],
-  },
-  gunViolence: {
-    years: [2020, 2021, 2022, 2023, 2024],
-    suicides: [24000, 24600, 24800, 24185, 16162],
-    homicides: [19300, 20900, 20000, 18874, 12988],
-    other: [2000, 2100, 2050, 2000, 1000],
-    massShootings: [611, 690, 647, 656, 488],
-  },
-  scale: {
-    categories: [
-      'Ideological Murders (CSIS/ADL)',
-      'Homicides (FBI 2023)',
-      'Firearm Suicides (GVA 2023)'
-    ],
-    values: [20, 18874, 24185],
-  }
-};
 export default function Home() {
+  const [layoutTheme, setLayoutTheme] = useState(lightLayout);
+
   useEffect(() => {
-    loadPlotly().then((Plotly) => {
-      if (!Plotly) return;
-      // Hate Crime Trends
-      Plotly.newPlot('violence-hc', [
-        { x: violenceData.hateCrime.years, y: violenceData.hateCrime.total, name: 'Total Hate Crime Incidents', type: 'scatter', line: { color: 'black', width: 2 } },
-        { x: violenceData.hateCrime.years, y: violenceData.hateCrime.race, name: 'Race/Ethnicity/Ancestry', type: 'scatter', line: { dash: 'dash' } },
-        { x: violenceData.hateCrime.years, y: violenceData.hateCrime.religion, name: 'Religion', type: 'scatter', line: { dash: 'dash' } },
-        { x: violenceData.hateCrime.years, y: violenceData.hateCrime.sexual_orientation, name: 'Sexual Orientation', type: 'scatter', line: { dash: 'dash' } },
-      ], {
-        title: 'FBI Hate Crime Incidents by Motivation (2018–2023)',
-        xaxis: { title: 'Year' },
-        yaxis: { title: 'Incidents Reported' },
-        legend: { orientation: 'h' },
-      });
+    // Check initial preference and listen for changes
+    const checkTheme = () => {
+      if (document.documentElement.classList.contains('dark')) {
+        setLayoutTheme(darkLayout);
+      } else {
+        setLayoutTheme(lightLayout);
+      }
+    };
 
-      // NCVS vs FBI
-      Plotly.newPlot('violence-ncvs', [
-        { x: violenceData.ncvsFbi.years, y: violenceData.ncvsFbi.ncvs, name: 'NCVS (Victimization, per 1,000)', type: 'scatter', mode: 'lines+markers' },
-        { x: violenceData.ncvsFbi.years, y: violenceData.ncvsFbi.fbi.map(x => x/100), name: 'FBI CDE (Reported, per 1,000)', type: 'scatter', mode: 'lines+markers' },
-      ], {
-        title: 'Reported vs Experienced Violent Crime (NCVS vs FBI, 2019–2023)',
-        xaxis: { title: 'Year' },
-        yaxis: { title: 'Rate per 1,000 persons (age 12+)' },
-        legend: { orientation: 'h' },
-      });
+    checkTheme();
 
-      // LEOKA
-      Plotly.newPlot('violence-leoka', [
-        { x: violenceData.leoka.years, y: violenceData.leoka.assaults, name: 'Officer Assaults', type: 'bar', marker: { color: 'rgba(0,0,255,0.6)' } },
-        { x: violenceData.leoka.years, y: violenceData.leoka.felonious, name: 'Felonious Deaths', type: 'scatter', mode: 'lines+markers', marker: { color: 'red' } },
-        { x: violenceData.leoka.years, y: violenceData.leoka.ambush, name: 'Ambush Deaths', type: 'scatter', mode: 'lines+markers', marker: { color: 'darkred' }, line: { dash: 'dash' } },
-      ], {
-        title: 'LEOKA: Violence Against Law Enforcement (2019–2023)',
-        xaxis: { title: 'Year' },
-        yaxis: { title: 'Incidents/Deaths' },
-        legend: { orientation: 'h' },
-      });
-
-      // Gun Violence Archive
-      Plotly.newPlot('violence-gva', [
-        { x: violenceData.gunViolence.years, y: violenceData.gunViolence.suicides, name: 'Suicides', type: 'bar', marker: { color: 'orange' } },
-        { x: violenceData.gunViolence.years, y: violenceData.gunViolence.homicides, name: 'Homicides', type: 'bar', marker: { color: 'red' } },
-        { x: violenceData.gunViolence.years, y: violenceData.gunViolence.other, name: 'Other', type: 'bar', marker: { color: 'gray' } },
-      ], {
-        title: 'Gun Violence Deaths by Category (2020–2024)',
-        xaxis: { title: 'Year' },
-        yaxis: { title: 'Deaths' },
-        legend: { orientation: 'h' },
-        annotations: violenceData.gunViolence.massShootings.map((ms, i) => ({
-          x: violenceData.gunViolence.years[i],
-          y: violenceData.gunViolence.suicides[i] + violenceData.gunViolence.homicides[i] + violenceData.gunViolence.other[i] + 500,
-          text: `MS:${ms}`,
-          showarrow: false,
-        }))
-      });
-
-      // Extremist vs Structural Violence
-      Plotly.newPlot('violence-scale', [
-        { x: violenceData.scale.categories, y: violenceData.scale.values, type: 'bar', marker: { color: ['blue','red','orange'] }, text: violenceData.scale.values.map(String), textposition: 'outside' },
-      ], {
-        title: 'Scale of Violence: Extremist vs Structural (2023)',
-        yaxis: { title: 'Deaths' },
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          checkTheme();
+        }
       });
     });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
   }, []);
+
+  // Hate Crime Trends
+  const hateCrimeChart = {
+    data: [
+      { x: violenceData.hateCrime.years, y: violenceData.hateCrime.total, name: 'Total Hate Crime Incidents', type: 'scatter', line: { color: 'black', width: 2 } },
+      { x: violenceData.hateCrime.years, y: violenceData.hateCrime.race, name: 'Race/Ethnicity/Ancestry', type: 'scatter', line: { dash: 'dash' } },
+      { x: violenceData.hateCrime.years, y: violenceData.hateCrime.religion, name: 'Religion', type: 'scatter', line: { dash: 'dash' } },
+      { x: violenceData.hateCrime.years, y: violenceData.hateCrime.sexual_orientation, name: 'Sexual Orientation', type: 'scatter', line: { dash: 'dash' } },
+    ] as Data[],
+    layout: {
+      ...layoutTheme,
+      title: { text: 'FBI Hate Crime Incidents by Motivation (2018–2023)' },
+      xaxis: { title: { text: 'Year' }, ...layoutTheme.xaxis },
+      yaxis: { title: { text: 'Incidents Reported' }, ...layoutTheme.yaxis },
+    }
+  };
+
+  // NCVS vs FBI
+  const ncvsFbiChart = {
+    data: [
+      { x: violenceData.ncvsFbi.years, y: violenceData.ncvsFbi.ncvs, name: 'NCVS (Victimization, per 1,000)', type: 'scatter', mode: 'lines+markers' },
+      { x: violenceData.ncvsFbi.years, y: violenceData.ncvsFbi.fbi.map(x => x/100), name: 'FBI CDE (Reported, per 1,000)', type: 'scatter', mode: 'lines+markers' },
+    ] as Data[],
+    layout: {
+      ...layoutTheme,
+      title: { text: 'Reported vs Experienced Violent Crime (NCVS vs FBI, 2019–2023)' },
+      xaxis: { title: { text: 'Year' }, ...layoutTheme.xaxis },
+      yaxis: { title: { text: 'Rate per 1,000 persons (age 12+)' }, ...layoutTheme.yaxis },
+    }
+  };
+
+  // LEOKA
+  const leokaChart = {
+    data: [
+      { x: violenceData.leoka.years, y: violenceData.leoka.assaults, name: 'Officer Assaults', type: 'bar', marker: { color: 'rgba(0,0,255,0.6)' } },
+      { x: violenceData.leoka.years, y: violenceData.leoka.felonious, name: 'Felonious Deaths', type: 'scatter', mode: 'lines+markers', marker: { color: 'red' }, yaxis: 'y2' },
+      { x: violenceData.leoka.years, y: violenceData.leoka.ambush, name: 'Ambush Deaths', type: 'scatter', mode: 'lines+markers', marker: { color: 'darkred' }, line: { dash: 'dash' }, yaxis: 'y2' },
+    ] as Data[],
+    layout: {
+      ...layoutTheme,
+      title: { text: 'LEOKA: Violence Against Law Enforcement (2019–2023)' },
+      xaxis: { title: { text: 'Year' }, ...layoutTheme.xaxis },
+      yaxis: { title: { text: 'Assaults' }, ...layoutTheme.yaxis },
+      yaxis2: {
+        title: { text: 'Deaths' },
+        overlaying: 'y' as const,
+        side: 'right' as const,
+        ...layoutTheme.yaxis // reusing grid styles
+      },
+      legend: { ...layoutTheme.legend, x: 0, y: 1.1 }
+    }
+  };
+
+  // Gun Violence Archive
+  const gunViolenceChart = {
+    data: [
+      { x: violenceData.gunViolence.years, y: violenceData.gunViolence.suicides, name: 'Suicides', type: 'bar', marker: { color: 'orange' } },
+      { x: violenceData.gunViolence.years, y: violenceData.gunViolence.homicides, name: 'Homicides', type: 'bar', marker: { color: 'red' } },
+      { x: violenceData.gunViolence.years, y: violenceData.gunViolence.other, name: 'Other', type: 'bar', marker: { color: 'gray' } },
+    ] as Data[],
+    layout: {
+      ...layoutTheme,
+      title: { text: 'Gun Violence Deaths by Category (2020–2024)' },
+      xaxis: { title: { text: 'Year' }, ...layoutTheme.xaxis },
+      yaxis: { title: { text: 'Deaths' }, ...layoutTheme.yaxis },
+      barmode: 'stack' as const,
+      annotations: violenceData.gunViolence.massShootings.map((ms, i) => ({
+        x: violenceData.gunViolence.years[i],
+        y: violenceData.gunViolence.suicides[i] + violenceData.gunViolence.homicides[i] + violenceData.gunViolence.other[i] + 1000,
+        text: `MS:${ms}`,
+        showarrow: false,
+        font: { color: layoutTheme.font?.color }
+      }))
+    }
+  };
+
+  // Extremist vs Structural Violence
+  const scaleChart = {
+    data: [
+      { x: violenceData.scale.categories, y: violenceData.scale.values, type: 'bar', marker: { color: ['blue','red','orange'] }, text: violenceData.scale.values.map(String), textposition: 'outside' },
+    ] as Data[],
+    layout: {
+      ...layoutTheme,
+      title: { text: 'Scale of Violence: Extremist vs Structural (2023)' },
+      yaxis: { title: { text: 'Deaths' }, ...layoutTheme.yaxis },
+      xaxis: { ...layoutTheme.xaxis }
+    }
+  };
+
   return (
-    <div className="space-y-12 p-4">
-      <h1 className="text-3xl font-bold mb-4">Violence Statistics Dashboard</h1>
-      <div id="violence-hc" style={{height:400}}></div>
-      <div id="violence-ncvs" style={{height:400}}></div>
-      <div id="violence-leoka" style={{height:400}}></div>
-      <div id="violence-gva" style={{height:400}}></div>
-      <div id="violence-scale" style={{height:400}}></div>
+    <div className="space-y-8">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">
+          Violence Statistics Dashboard
+        </h1>
+        <p className="max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
+          Comprehensive data visualization of violence trends in the United States, covering hate crimes, law enforcement incidents, and gun violence.
+        </p>
+      </div>
+
+      <DashboardGrid>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+          <ChartWrapper id="violence-hc" data={hateCrimeChart.data} layout={hateCrimeChart.layout} />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
+            FBI Hate Crime Statistics showing total incidents and breakdowns by bias motivation. Note the significant increase in reported incidents in recent years.
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+          <ChartWrapper id="violence-ncvs" data={ncvsFbiChart.data} layout={ncvsFbiChart.layout} />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
+            Comparison between the National Crime Victimization Survey (NCVS) and FBI reported data. Shows the gap between experienced and reported violent crime.
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+          <ChartWrapper id="violence-leoka" data={leokaChart.data} layout={leokaChart.layout} />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
+            Law Enforcement Officers Killed and Assaulted (LEOKA) data. Illustrates trends in assaults against officers and line-of-duty deaths.
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+          <ChartWrapper id="violence-gva" data={gunViolenceChart.data} layout={gunViolenceChart.layout} />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic">
+            Gun Violence Archive data categorized by suicides, homicides, and other gun deaths. &quot;MS&quot; indicates Mass Shootings count for each year.
+          </p>
+        </div>
+      </DashboardGrid>
+
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+        <ChartWrapper id="violence-scale" data={scaleChart.data} layout={scaleChart.layout} className="h-[500px]" />
+         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 italic text-center">
+            Contextual scale comparing deaths from ideological extremism to broader structural violence (homicides and suicides).
+          </p>
+      </div>
     </div>
   );
 }
