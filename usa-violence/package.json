@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "15.5.3",
+    "next": "15.5.25",
     "plotly": "^1.0.6",
     "plotly.js-dist-min": "^3.1.0",
     "react": "19.1.0",
